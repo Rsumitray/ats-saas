@@ -1,0 +1,15 @@
+# Secrets — never commit real keys
+backend/.env
+
+# Local database
+backend/*.db
+backend/*.db-journal
+
+# Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+
+# OS/editor cruft
+.DS_Store

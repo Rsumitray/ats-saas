@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShreeResumebuild.AI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--text:#1e1c1a;--sub:#6b6560;--line:#e6e2dd;--accent:#b45309;--good:#2f7d4f;--warn:#b7791f;--bad:#b3261e}
+@media (prefers-color-scheme: dark){:root{--bg:#181614;--card:#221f1c;--text:#f0ece6;--sub:#a89f96;--line:#332f2a}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:920px;margin:0 auto;padding:28px 20px 60px}
+nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:10px}
+h1{font-size:1.4rem;margin:0}
+.tag{color:var(--sub);font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px}
+label{font-weight:600;font-size:.85rem;display:block;margin-bottom:6px}
+textarea{width:100%;min-height:160px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text);padding:10px;font-size:.9rem;font-family:inherit}
+input[type=text],input[type=password],input[type=tel]{width:100%;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text);padding:9px 10px;font-size:.9rem}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:700px){.row{grid-template-columns:1fr}}
+button.primary{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-size:.9rem;font-weight:600;cursor:pointer}
+button.primary:disabled{opacity:.5}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 16px;font-size:.85rem;cursor:pointer}
+.status{color:var(--sub);font-size:.85rem;margin-top:10px;min-height:1.2em}
+.err{color:var(--bad)}
+.ok{color:var(--good)}
+.hidden{display:none!important}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:700;margin-right:6px}
+.pill.high{background:#fbe4e1;color:var(--bad)}.pill.med{background:#fbeccb;color:var(--warn)}.pill.good{background:#e0f0e5;color:var(--good)}
+.ring{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700}
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.score-item{padding:10px;border:1px solid var(--line);border-radius:10px}
+.bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar>div{height:100%}
+.finding{padding:9px 0;border-bottom:1px solid var(--line)}
+.bullet{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:.87rem}
+.plan-badge{font-size:.72rem;padding:3px 9px;border-radius:12px;background:var(--line)}
+.auth-box{max-width:380px;margin:40px auto}
+
+/* --- Auth tabs (Sign in / Create account) --- */
+.auth-tabs{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.auth-tabs button{flex:1;padding:10px;border:none;background:transparent;color:var(--sub);font-weight:600;font-size:.85rem;cursor:pointer}
+.auth-tabs button.active{background:var(--accent);color:#fff}
+
+/* --- Channel toggle (Email / Phone) --- */
+.channel-tabs{display:flex;gap:8px;margin-bottom:10px}
+.channel-tabs button{padding:6px 14px;border:1px solid var(--line);border-radius:20px;background:transparent;color:var(--text);font-size:.8rem;cursor:pointer}
+.channel-tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.identifier-wrap{position:relative;margin-bottom:10px}
+.phone-row{display:flex;gap:8px}
+.phone-row select{border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);padding:9px 6px;font-size:.9rem}
+
+/* Custom email-domain suggestion dropdown (built in, not the flaky browser one) */
+.domain-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--line);
+  border-top:none;border-radius:0 0 10px 10px;z-index:10;max-height:160px;overflow-y:auto}
+.domain-suggest div{padding:8px 12px;font-size:.85rem;cursor:pointer}
+.domain-suggest div:hover, .domain-suggest div.hl{background:var(--bg)}
+
+.config-banner{background:#fbeccb;color:#5c4413;border:1px solid #e0b354;border-radius:10px;padding:12px 14px;font-size:.82rem;margin-bottom:16px}
+:root:not([data-theme="light"]) .config-banner{background:#3a2f16;color:#f0d99a;border-color:#5c4413}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div><h1>📄 ShreeResumebuild.AI</h1><div class="tag">AI-powered resume analysis & ATS-safe rewriting</div></div>
+    <div id="navRight"></div>
+  </nav>
+
+  <div id="configBanner" class="config-banner hidden"></div>
+
+  <!-- ======================= AUTH VIEW ======================= -->
+  <div id="authView" class="auth-box hidden">
+    <div class="card">
+      <!-- Tab 1: which flow (default = Create account, since first-time users must create one before they can log in) -->
+      <div class="auth-tabs">
+        <button id="tabSignup" class="active">Create account</button>
+        <button id="tabSignin">Sign in</button>
+      </div>
+
+      <!-- Tab 2: which identifier type -->
+      <div class="channel-tabs">
+        <button id="chanEmail" class="active" data-channel="email">Email</button>
+        <button id="chanPhone" data-channel="phone">Phone</button>
+      </div>
+
+      <!-- Email input (with our own domain-suggestion dropdown) -->
+      <div class="identifier-wrap" id="emailWrap">
+        <input type="text" id="emailInput" placeholder="you@example.com" autocomplete="email" inputmode="email">
+        <div id="domainSuggest" class="domain-suggest hidden"></div>
+      </div>
+
+      <!-- Phone input (country code + number) -->
+      <div class="identifier-wrap hidden" id="phoneWrap">
+        <div class="phone-row">
+          <select id="countryCode">
+            <option value="+91">🇮🇳 +91</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+971">🇦🇪 +971</option>
+            <option value="+61">🇦🇺 +61</option>
+          </select>
+          <input type="tel" id="phoneInput" placeholder="9876543210" autocomplete="tel" inputmode="numeric">
+        </div>
+      </div>
+
+      <input type="password" id="authPassword" placeholder="Password (min 8 chars)" style="margin-bottom:10px">
+      <button class="primary" id="authSubmit" style="width:100%">Create account</button>
+      <div class="status" id="authStatus"></div>
+    </div>
+  </div>
+
+  <!-- ======================= APP VIEW ======================= -->
+  <div id="appView" class="hidden">
+    <div class="card" id="planCard"></div>
+    <div class="card">
+      <input type="text" id="targetRole" placeholder="Target role / title (optional)" style="margin-bottom:14px">
+      <div class="row">
+        <div>
+          <label>Resume</label>
+          <textarea id="resumeText" placeholder="Paste your resume text..."></textarea>
+          <div class="tag" style="margin-top:6px">Or upload: <input type="file" id="resumeFile" accept=".txt,.pdf,.docx"></div>
+        </div>
+        <div>
+          <label>Target job description</label>
+          <div class="channel-tabs" id="jdModeTabs" style="margin-bottom:10px">
+            <button id="jdModePaste" class="active" data-mode="paste">Paste JD</button>
+            <button id="jdModeTitle" data-mode="title">Just the job title</button>
+          </div>
+          <div id="jdPasteWrap">
+            <textarea id="jdText" placeholder="Paste the job description..."></textarea>
+            <div class="tag" style="margin-top:6px">Or upload: <input type="file" id="jdFile" accept=".txt,.pdf,.docx"></div>
+          </div>
+          <div id="jdTitleWrap" class="hidden">
+            <input type="text" id="jdTitleInput" placeholder="e.g. Senior Product Manager, Fintech" style="margin-bottom:8px">
+            <div class="tag" style="padding:10px;border:1px dashed var(--line);border-radius:10px;line-height:1.5">
+              No job description? No problem — type the role above and ShreeResumebuild.AI will analyze against
+              general best-practice expectations for that role instead.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <button class="primary" id="analyzeBtn">Analyze Resume (free)</button>
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+    <div id="results" class="hidden"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+ * CONFIG — the only block you should need to touch when deploying.
+ * ==========================================================================*/
+const CONFIG = {
+  // Set this to your deployed backend's base URL, e.g. "https://your-api.up.railway.app".
+  // Left as the placeholder below on purpose so a misconfigured deploy fails
+  // LOUDLY (see checkConfig() below) instead of quietly showing "Failed to fetch".
+  API_BASE_URL: '__API_BASE_URL__',
+  // When true, every API call and its result is logged to the browser console
+  // as `[ATS]`. Turn this on while debugging, off for a slightly cleaner console in prod.
+  DEBUG: true,
+};
+
+// If this file is opened on localhost (e.g. during local dev), always point
+// at the local backend regardless of what CONFIG.API_BASE_URL says.
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : CONFIG.API_BASE_URL;
+
+function debugLog(...args){ if (CONFIG.DEBUG) console.log('[ATS]', ...args); }
+
+/* ============================================================================
+ * STARTUP CONFIG CHECK
+ * This is the fix for the exact bug in the demo video: opening the page
+ * without a real backend configured produced a generic, confusing
+ * "Failed to fetch" with no indication of *why*. Now we check up front and
+ * show one clear banner instead, and skip network calls entirely until fixed.
+ * ==========================================================================*/
+function checkConfig(){
+  const banner = document.getElementById('configBanner');
+  if (!API || API.includes('__API_BASE_URL__')) {
+    banner.classList.remove('hidden');
+    banner.innerHTML = `⚠️ <b>Backend not configured.</b> This page's <code>CONFIG.API_BASE_URL</code> is still the
+      placeholder value. Sign in/up will not work until you either (a) run the backend locally on
+      <code>http://localhost:8000</code> and open this file from <code>localhost</code>, or (b) edit
+      <code>CONFIG.API_BASE_URL</code> near the top of the &lt;script&gt; tag to your deployed backend's URL.
+      See the project README, section 5.`;
+    return false;
+  }
+  return true;
+}
+const configOk = checkConfig();
+
+/* ============================================================================
+ * SMALL API HELPER — every network call in this app goes through this, so
+ * error handling and debug logging live in exactly one place.
+ * ==========================================================================*/
+const $ = id => document.getElementById(id);
+let token = localStorage.getItem('ats_token');
+
+function authHeaders(){ return token ? {'Authorization':'Bearer '+token} : {}; }
+
+async function api(path, opts={}){
+  debugLog('->', opts.method || 'GET', path, opts.body || '');
+  let res;
+  try{
+    res = await fetch(API+path, {...opts, headers: {'Content-Type':'application/json', ...authHeaders(), ...(opts.headers||{})}});
+  }catch(networkErr){
+    // This is the "Failed to fetch" case from the demo — give a human reason instead.
+    debugLog('NETWORK ERROR', networkErr);
+    throw new Error(`Can't reach the server at ${API}. Is the backend running and CONFIG.API_BASE_URL correct?`);
+  }
+  const data = await res.json().catch(()=>({}));
+  debugLog('<-', res.status, path, data);
+  if(!res.ok) throw new Error(data.detail || `Server error (${res.status})`);
+  return data;
+}
+
+/* ============================================================================
+ * AUTH — two independent toggles:
+ *   1) authMode: 'signup' | 'signin'   (which tab is active)
+ *   2) channel:  'email'  | 'phone'    (which identifier type is being entered)
+ * Default is 'signup' because first-time users must create an account before
+ * they can sign in — this mirrors the requested flow exactly.
+ * ==========================================================================*/
+let authMode = 'signup';
+let channel = 'email';
+
+function setAuthMode(mode){
+  authMode = mode;
+  $('tabSignup').classList.toggle('active', mode==='signup');
+  $('tabSignin').classList.toggle('active', mode==='signin');
+  $('authSubmit').textContent = mode==='signup' ? 'Create account' : 'Sign in';
+  $('authStatus').className = 'status'; $('authStatus').textContent = '';
+}
+$('tabSignup').addEventListener('click', ()=>setAuthMode('signup'));
+$('tabSignin').addEventListener('click', ()=>setAuthMode('signin'));
+
+function setChannel(ch){
+  channel = ch;
+  $('chanEmail').classList.toggle('active', ch==='email');
+  $('chanPhone').classList.toggle('active', ch==='phone');
+  $('emailWrap').classList.toggle('hidden', ch!=='email');
+  $('phoneWrap').classList.toggle('hidden', ch!=='phone');
+  hideDomainSuggest();
+}
+$('chanEmail').addEventListener('click', ()=>setChannel('email'));
+$('chanPhone').addEventListener('click', ()=>setChannel('phone'));
+
+function currentIdentifier(){
+  if(channel==='email') return $('emailInput').value.trim();
+  const code = $('countryCode').value;
+  const num = $('phoneInput').value.replace(/\D/g,'');
+  return num ? code+num : '';
+}
+
+/* --- Custom email-domain suggestion dropdown ---
+ * Replaces the unreliable native browser popup seen in the demo. Shows once
+ * the user types "@", filtered by whatever they type after it. Click (or
+ * arrow keys + Enter) to complete the domain. */
+const COMMON_DOMAINS = ['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com'];
+let hlIndex = -1;
+
+function hideDomainSuggest(){ $('domainSuggest').classList.add('hidden'); $('domainSuggest').innerHTML=''; hlIndex=-1; }
+
+function updateDomainSuggest(){
+  const val = $('emailInput').value;
+  const at = val.indexOf('@');
+  if(at === -1){ hideDomainSuggest(); return; }
+  const typed = val.slice(at+1).toLowerCase();
+  const matches = COMMON_DOMAINS.filter(d => d.startsWith(typed));
+  if(matches.length === 0 || typed === matches[0]){ hideDomainSuggest(); return; }
+  $('domainSuggest').innerHTML = matches.map((d,i)=>`<div data-domain="${d}" class="${i===0?'hl':''}">${val.slice(0,at+1)}${d}</div>`).join('');
+  $('domainSuggest').classList.remove('hidden');
+  hlIndex = 0;
+}
+$('emailInput').addEventListener('input', updateDomainSuggest);
+$('emailInput').addEventListener('blur', ()=> setTimeout(hideDomainSuggest, 150)); // delay so click below still registers
+$('domainSuggest').addEventListener('mousedown', e=>{
+  const target = e.target.closest('[data-domain]');
+  if(!target) return;
+  $('emailInput').value = target.textContent;
+  hideDomainSuggest();
+});
+$('emailInput').addEventListener('keydown', e=>{
+  const items = [...$('domainSuggest').querySelectorAll('div')];
+  if(items.length===0) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); hlIndex=(hlIndex+1)%items.length; }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); hlIndex=(hlIndex-1+items.length)%items.length; }
+  else if(e.key==='Enter' && hlIndex>=0){ e.preventDefault(); $('emailInput').value = items[hlIndex].textContent; hideDomainSuggest(); return; }
+  else return;
+  items.forEach((it,i)=>it.classList.toggle('hl', i===hlIndex));
+});
+
+/* --- Submit handler for both Create account and Sign in --- */
+$('authSubmit').addEventListener('click', async ()=>{
+  const st = $('authStatus'); st.className='status'; st.textContent='';
+  if(!configOk){ st.className='status err'; st.textContent='Backend not configured — see the banner above.'; return; }
+
+  const identifier = currentIdentifier();
+  const password = $('authPassword').value;
+
+  if(!identifier){ st.className='status err'; st.textContent = channel==='email' ? 'Enter your email address.' : 'Enter your phone number.'; return; }
+  if(password.length < 8){ st.className='status err'; st.textContent = 'Password must be at least 8 characters.'; return; }
+
+  $('authSubmit').disabled = true;
+  try{
+    if(authMode === 'signup'){
+      await api('/api/register', {method:'POST', body: JSON.stringify({identifier, password})});
+      // Per the requested flow: after creating an account, do NOT auto-login.
+      // Switch to the Sign In tab with the identifier pre-filled and ask them
+      // to log in with the password they just set — this makes "you now have
+      // a login ID + password" an explicit, visible step rather than a silent skip.
+      setAuthMode('signin');
+      st.className = 'status ok';
+      st.textContent = 'Account created! Sign in with the password you just set.';
+    } else {
+      const data = await api('/api/login', {method:'POST', body: JSON.stringify({identifier, password})});
+      token = data.access_token;
+      localStorage.setItem('ats_token', token);
+      showApp();
+    }
+  }catch(err){
+    st.className = 'status err';
+    st.textContent = err.message;
+  }finally{
+    $('authSubmit').disabled = false;
+  }
+});
+
+function showAuth(){ $('authView').classList.remove('hidden'); $('appView').classList.add('hidden'); }
+function showApp(){ $('authView').classList.add('hidden'); $('appView').classList.remove('hidden'); loadMe(); }
+
+/* ============================================================================
+ * NAV / SESSION
+ * ==========================================================================*/
+function renderNav(){
+  $('navRight').innerHTML = `<button class="ghost" id="logoutBtn">Log out</button>`;
+  $('logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem('ats_token'); token=null; showAuth(); });
+}
+
+let meCache = null;
+
+let selectedCurrency = 'INR';
+
+async function loadMe(){
+  renderNav();
+  try{
+    const me = await api('/api/me');
+    meCache = me;
+    const badge = me.plan_active ? `<span class="plan-badge">⭐ Plan active until ${new Date(me.plan_expires_at).toLocaleDateString()}</span>` : `<span class="plan-badge">No active plan</span>`;
+    const sym = selectedCurrency === 'USD' ? '$' : '₹';
+    const planPrice = selectedCurrency === 'USD' ? me.prices.plan_usd : me.prices.plan_inr;
+    const topupPrice = selectedCurrency === 'USD' ? me.prices.topup_usd : me.prices.topup_inr;
+    // Only show the currency switch at all if USD is actually enabled server-side —
+    // no point offering a button that's guaranteed to fail.
+    const currencyToggle = me.prices.usd_enabled ? `
+      <div class="channel-tabs" style="margin-top:10px;display:inline-flex">
+        <button id="currInr" class="${selectedCurrency==='INR'?'active':''}" data-c="INR">₹ INR</button>
+        <button id="currUsd" class="${selectedCurrency==='USD'?'active':''}" data-c="USD">$ USD</button>
+      </div>` : '';
+    $('planCard').innerHTML = `${badge}
+      <div style="margin-top:6px" class="tag">Signed in as ${me.email || me.phone}</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.85rem">
+        <div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px">Rewrites: <b>${me.modify_remaining}</b> / ${me.modify_quota||0} left</div>
+        <div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px">Downloads: <b>${me.download_remaining}</b> / ${me.download_quota||0} left</div>
+      </div>
+      ${currencyToggle}
+      <div style="margin-top:12px">
+        <button class="primary" id="buyPlanBtn">${me.plan_active ? `Renew plan — ${sym}${planPrice}/mo` : `Buy plan — ${sym}${planPrice}/mo`}</button>
+        ${me.plan_active ? `<button class="ghost" id="topupBtn" style="margin-left:8px">Top up — ${sym}${topupPrice} (+${me.prices.topup_modify_quota} rewrites / +${me.prices.topup_download_quota} downloads)</button>` : ''}
+      </div>
+      <div class="tag" style="margin-top:8px">Analysis is always free. A plan unlocks the ATS-safe rewrite: ${me.prices.plan_modify_quota} rewrites &amp; ${me.prices.plan_download_quota} downloads for ${me.prices.plan_validity_days} days.</div>`;
+    $('buyPlanBtn').addEventListener('click', ()=>startPurchase('plan'));
+    $('topupBtn')?.addEventListener('click', ()=>startPurchase('topup'));
+    $('currInr')?.addEventListener('click', ()=>{ selectedCurrency='INR'; loadMe(); });
+    $('currUsd')?.addEventListener('click', ()=>{ selectedCurrency='USD'; loadMe(); });
+  }catch(err){
+    debugLog('loadMe failed, forcing re-auth:', err.message);
+    localStorage.removeItem('ats_token'); token=null; showAuth();
+  }
+}
+
+/* ============================================================================
+ * BILLING (Razorpay)
+ * ==========================================================================*/
+async function startPurchase(kind){
+  try{
+    const order = await api('/api/billing/create-order', {method:'POST', body: JSON.stringify({kind, currency: selectedCurrency})});
+    const rzp = new Razorpay({
+      key: order.key_id,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'ShreeResumebuild.AI',
+      description: kind==='plan' ? 'Monthly plan' : 'Top-up',
+      order_id: order.order_id,
+      handler: async function(response){
+        try{
+          await api('/api/billing/verify', {method:'POST', body: JSON.stringify({
+            kind,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature
+          })});
+          loadMe();
+        }catch(err){ alert('Payment verification failed: '+err.message); }
+      },
+      theme: {color: '#b45309'}
+    });
+    rzp.open();
+  }catch(err){ alert(err.message); }
+}
+
+/* ============================================================================
+ * FILE EXTRACTION (client-side PDF/DOCX -> text)
+ * ==========================================================================*/
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+async function extractPdf(buf){
+  const doc = await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  for(let i=1;i<=doc.numPages;i++){ const page=await doc.getPage(i); const c=await page.getTextContent(); text += c.items.map(it=>it.str).join(' ')+'\n\n'; }
+  return text.trim();
+}
+async function extractDocx(buf){ return (await mammoth.extractRawText({arrayBuffer:buf})).value.trim(); }
+function wireFile(fileInput, textarea){
+  fileInput.addEventListener('change', async ()=>{
+    const f = fileInput.files[0]; if(!f) return;
+    try{
+      const name = f.name.toLowerCase();
+      if(name.endsWith('.pdf')) textarea.value = await extractPdf(await f.arrayBuffer());
+      else if(name.endsWith('.docx')) textarea.value = await extractDocx(await f.arrayBuffer());
+      else textarea.value = await f.text();
+    }catch(err){ alert('Could not read '+f.name+': '+err.message); }
+  });
+}
+wireFile($('resumeFile'), $('resumeText'));
+wireFile($('jdFile'), $('jdText'));
+
+/* --- JD mode toggle: paste a full JD, or just enter a job title --- */
+let jdMode = 'paste';
+function setJdMode(mode){
+  jdMode = mode;
+  $('jdModePaste').classList.toggle('active', mode==='paste');
+  $('jdModeTitle').classList.toggle('active', mode==='title');
+  $('jdPasteWrap').classList.toggle('hidden', mode!=='paste');
+  $('jdTitleWrap').classList.toggle('hidden', mode!=='title');
+  $('targetRole').placeholder = mode==='title'
+    ? 'Target role / title (required) — e.g. Senior Product Manager, Fintech'
+    : 'Target role / title (optional)';
+  if(mode==='title') $('jdTitleInput').value = $('targetRole').value;
+}
+$('jdModePaste').addEventListener('click', ()=>setJdMode('paste'));
+$('jdModeTitle').addEventListener('click', ()=>setJdMode('title'));
+// The job-title box inside the JD panel and the "Target role" field at the top
+// are kept in sync both ways, since either one might be the field the user
+// actually notices and types into.
+$('jdTitleInput').addEventListener('input', ()=>{ $('targetRole').value = $('jdTitleInput').value; });
+$('targetRole').addEventListener('input', ()=>{ if(jdMode==='title') $('jdTitleInput').value = $('targetRole').value; });
+
+/* ============================================================================
+ * RESULTS RENDERING (analysis + rewrite)
+ * ==========================================================================*/
+let lastAnalysis = null, lastResumeText='', lastJdText='', lastRole='';
+
+function ringColor(v){ return v>=80?'var(--good)':v>=60?'var(--warn)':'var(--bad)'; }
+function sevPill(sev){ const s=(sev||'').toUpperCase(); const cls=s==='HIGH'?'high':s==='MEDIUM'?'med':'good'; return `<span class="pill ${cls}">${s||'INFO'}</span>`; }
+
+function renderResults(data){
+  const c = ringColor(data.overall_score||0);
+  let html = `<div class="card"><h2>Overall Resume Readiness</h2>
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div class="ring" style="background:conic-gradient(${c} ${(data.overall_score||0)*3.6}deg, var(--line) 0deg); color:${c}">
+        <div style="background:var(--card);width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center">${data.overall_score ?? '-'}</div>
+      </div>
+      <div style="flex:1;min-width:200px">${(data.summary||'').replace(/</g,'&lt;')}</div>
+    </div><div class="scores">`;
+  const labels = {ats:'ATS Compatibility',jd_match:'JD Match',content_quality:'Content Quality',bullet_quality:'Bullet Quality',impact:'Impact & Quantification',ocr:'OCR Compatibility'};
+  for(const k in labels){ const v=(data.scores&&data.scores[k])||0;
+    html += `<div class="score-item">${labels[k]}<div style="font-weight:700">${v}/100</div><div class="bar"><div style="width:${v}%;background:${ringColor(v)}"></div></div></div>`; }
+  html += `</div></div>`;
+
+  if(data.priority_actions?.length){
+    html += `<div class="card"><h2>Priority Findings</h2>`;
+    data.priority_actions.forEach(a=>{ html += `<div class="finding">${sevPill(a.severity)} ${(a.text||'').replace(/</g,'&lt;')}</div>`; });
+    html += `</div>`;
+  }
+  if(data.ats_platform_checks?.length){
+    html += `<div class="card"><h2>ATS Platform Compatibility</h2>
+      <div class="tag" style="margin-bottom:10px">Estimated from your resume's text structure against known parsing behavior — not a guaranteed pass through any vendor's live system.</div>`;
+    data.ats_platform_checks.forEach(p=>{ html += `<div class="finding">${sevPill(p.risk)} <b>${p.platform}</b> — ${(p.note||'').replace(/</g,'&lt;')}</div>`; });
+    html += `</div>`;
+  }
+  if(data.keyword_analysis?.missing_must_have?.length){
+    html += `<div class="card"><h2>Missing Must-Have Keywords</h2><ul>`;
+    data.keyword_analysis.missing_must_have.forEach(m=>{ html += `<li><b>${m.term}</b> — ${(m.note||'').replace(/</g,'&lt;')}</li>`; });
+    html += `</ul></div>`;
+  }
+  if(data.bullet_analysis?.length){
+    html += `<div class="card"><h2>Bullet-by-Bullet Analysis</h2>`;
+    data.bullet_analysis.forEach(b=>{
+      html += `<div class="bullet"><div>${(b.original||'').replace(/</g,'&lt;')}</div><b>${b.classification||''}</b> — ${(b.reason||'').replace(/</g,'&lt;')}${b.improvement?`<br><i>Fix:</i> ${b.improvement.replace(/</g,'&lt;')}`:''}</div>`;
+    });
+    html += `</div>`;
+  }
+  if(data.formatting_analysis?.length){
+    html += `<div class="card"><h2>ATS & Formatting Risks</h2>`;
+    data.formatting_analysis.forEach(f=>{ html += `<div class="finding">${sevPill(f.severity)} <b>${(f.issue||'').replace(/</g,'&lt;')}</b> — ${(f.note||'').replace(/</g,'&lt;')}</div>`; });
+    html += `</div>`;
+  }
+
+  html += `<div class="card"><h2>Job Recommendations</h2>
+    <div class="tag" style="margin-bottom:10px">Free — roles you're genuinely qualified for right now, based only on what's in your resume.</div>
+    <button class="primary" id="jobRecsBtn">Get Job Recommendations</button>
+    <div class="status" id="jobRecsStatus"></div>
+    <div id="jobRecsOut" class="hidden" style="margin-top:12px"></div></div>`;
+
+  html += `<div class="card"><h2>Interview Prep</h2>
+    <div class="tag" style="margin-bottom:10px">Free — likely interview questions for this resume/role, with prep tips grounded in your own background.</div>
+    <button class="primary" id="interviewPrepBtn">Generate Interview Questions</button>
+    <div class="status" id="interviewPrepStatus"></div>
+    <div id="interviewPrepOut" class="hidden" style="margin-top:12px"></div></div>`;
+
+  html += `<div class="card"><h2>Rewrite my resume (ATS &amp; OCR safe)</h2>
+    <div class="tag" style="margin-bottom:10px">Uses only facts already in your resume — no invented metrics.</div>`;
+  if(meCache && meCache.plan_active){
+    html += `<button class="primary" id="rewriteBtn">Generate ATS-Safe Rewrite (${meCache.modify_remaining} left)</button>`;
+  } else {
+    html += `<div style="border:1px dashed var(--accent);border-radius:12px;padding:16px;text-align:center">This needs an active plan.<br><button class="primary" id="buyFromResultsBtn" style="margin-top:8px">Buy plan — ₹${meCache?.prices?.plan_inr||350}/mo</button></div>`;
+  }
+  html += `<div class="status" id="rewriteStatus"></div>
+    <div id="rewriteOut" class="hidden" style="margin-top:12px">
+      <textarea id="rewriteText" style="min-height:400px;font-family:ui-monospace,Menlo,monospace;font-size:.82rem"></textarea>
+      <div id="compatNote" class="tag" style="margin-top:6px"></div>
+      <div style="margin-top:10px" id="downloadArea"></div>
+      <div id="changeNotes" style="margin-top:12px;font-size:.85rem"></div>
+    </div></div>`;
+
+  $('results').innerHTML = html;
+  $('results').classList.remove('hidden');
+  $('jobRecsBtn')?.addEventListener('click', doJobRecs);
+  $('interviewPrepBtn')?.addEventListener('click', doInterviewPrep);
+  $('rewriteBtn')?.addEventListener('click', doRewrite);
+  $('buyFromResultsBtn')?.addEventListener('click', ()=>startPurchase('plan'));
+}
+
+async function doJobRecs(){
+  const btn=$('jobRecsBtn'), st=$('jobRecsStatus'), out=$('jobRecsOut');
+  btn.disabled=true; st.textContent='Thinking…'; st.className='status';
+  try{
+    const data = await api('/api/job-recommendations', {method:'POST', body: JSON.stringify({resume_text:lastResumeText, jd_text:lastJdText, target_role:lastRole})});
+    let html = '';
+    (data.recommendations||[]).forEach(r=>{
+      const tag = r.stretch_level==='stretch' ? '<span class="pill med">STRETCH</span>' : '<span class="pill good">CLOSE MATCH</span>';
+      html += `<div class="finding">${tag} <b>${(r.title||'').replace(/</g,'&lt;')}</b><br><span style="color:var(--sub);font-size:.85rem">${(r.why_fit||'').replace(/</g,'&lt;')}</span></div>`;
+    });
+    out.innerHTML = html || '<div class="tag">No recommendations returned.</div>';
+    out.classList.remove('hidden');
+    st.textContent = '';
+  }catch(err){ st.className='status err'; st.textContent=err.message; }
+  finally{ btn.disabled=false; }
+}
+
+async function doInterviewPrep(){
+  const btn=$('interviewPrepBtn'), st=$('interviewPrepStatus'), out=$('interviewPrepOut');
+  btn.disabled=true; st.textContent='Thinking…'; st.className='status';
+  try{
+    const data = await api('/api/interview-prep', {method:'POST', body: JSON.stringify({resume_text:lastResumeText, jd_text:lastJdText, target_role:lastRole})});
+    let html = '';
+    (data.questions||[]).forEach(q=>{
+      const typeLabel = q.type==='gap_probe' ? '<span class="pill med">LIKELY PROBE</span>' : q.type==='technical' ? '<span class="pill good">TECHNICAL</span>' : '<span class="pill good">BEHAVIORAL</span>';
+      html += `<div class="bullet">${typeLabel}<div style="margin-top:6px"><b>${(q.question||'').replace(/</g,'&lt;')}</b></div><div style="color:var(--sub);font-size:.85rem;margin-top:4px"><i>Prep tip:</i> ${(q.prep_tip||'').replace(/</g,'&lt;')}</div></div>`;
+    });
+    out.innerHTML = html || '<div class="tag">No questions returned.</div>';
+    out.classList.remove('hidden');
+    st.textContent = '';
+  }catch(err){ st.className='status err'; st.textContent=err.message; }
+  finally{ btn.disabled=false; }
+}
+
+async function doRewrite(){
+  const btn=$('rewriteBtn'), st=$('rewriteStatus');
+  btn.disabled=true; st.textContent='Rewriting…'; st.className='status';
+  try{
+    const out = await api('/api/rewrite', {method:'POST', body: JSON.stringify({
+      resume_text:lastResumeText, jd_text:lastJdText, target_role:lastRole,
+      findings:{missing_must_have:lastAnalysis?.keyword_analysis?.missing_must_have||[], bullet_analysis:lastAnalysis?.bullet_analysis||[], formatting_analysis:lastAnalysis?.formatting_analysis||[]}
+    })});
+    $('rewriteText').value = out.resume_text||'';
+    $('compatNote').textContent = out.compatibility_note || '';
+    $('changeNotes').innerHTML = '<h3>What changed</h3>' + (out.changes_summary||'').split('\n').filter(Boolean).map(l=>`<div class="finding">${l.replace(/</g,'&lt;')}</div>`).join('');
+    $('rewriteOut').classList.remove('hidden');
+    st.textContent=`Rewrite ready. ${out.modify_remaining} rewrites left.`;
+    renderDownloadArea();
+    loadMe();
+  }catch(err){ st.className='status err'; st.textContent=err.message; }
+  finally{ btn.disabled=false; }
+}
+
+function renderDownloadArea(){
+  const area = $('downloadArea');
+  if(meCache && meCache.download_remaining > 0){
+    area.innerHTML = `<button class="primary" id="copyBtn" style="background:var(--good)">Copy</button>
+      <button class="primary" id="downloadTxtBtn">Download .txt</button>
+      <button class="primary" id="downloadDocBtn">Download .doc</button>
+      <button class="primary" id="downloadPdfBtn">Download .pdf</button>
+      <div class="tag" style="margin-top:6px">${meCache.download_remaining} downloads left this cycle — each format you download counts as one.</div>`;
+  } else {
+    area.innerHTML = `<button class="primary" id="copyBtn" style="background:var(--good)">Copy</button>
+      <div style="border:1px dashed var(--accent);border-radius:12px;padding:16px;text-align:center;margin-top:8px">Out of downloads for this cycle.
+      <button class="primary" id="topupFromDlBtn" style="margin-top:8px">Top up — ₹${meCache?.prices?.topup_inr||150}</button></div>`;
+    $('topupFromDlBtn')?.addEventListener('click', ()=>startPurchase('topup'));
+  }
+  $('copyBtn')?.addEventListener('click', e=>{ navigator.clipboard.writeText($('rewriteText').value); e.target.textContent='Copied!'; setTimeout(()=>e.target.textContent='Copy',1500); });
+  $('downloadTxtBtn')?.addEventListener('click', ()=>doDownload('txt'));
+  $('downloadDocBtn')?.addEventListener('click', ()=>doDownload('doc'));
+  $('downloadPdfBtn')?.addEventListener('click', ()=>doDownload('pdf'));
+}
+
+function saveTxt(text){
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ats-safe-resume.txt'; a.click();
+}
+
+function saveDoc(text){
+  // A lightweight, dependency-free way to produce a real Word-openable file:
+  // Word/LibreOffice/Google Docs all recognize this HTML-with-Word-namespaces
+  // wrapper when given a .doc extension. No external library needed, so
+  // there's nothing here that can break on a CDN version bump.
+  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="utf-8"><title>Resume</title></head>
+<body><pre style="font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap">${escaped}</pre></body></html>`;
+  const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ats-safe-resume.doc'; a.click();
+}
+
+function savePdf(text){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const marginX = 48, marginTop = 56, marginBottom = 56;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const usableWidth = pageWidth - marginX*2;
+  doc.setFont('courier','normal');
+  doc.setFontSize(10);
+  const lineHeight = 13;
+  let y = marginTop;
+  const rawLines = text.split('\n');
+  for(const rawLine of rawLines){
+    const wrapped = doc.splitTextToSize(rawLine || ' ', usableWidth);
+    for(const line of wrapped){
+      if(y > pageHeight - marginBottom){ doc.addPage(); y = marginTop; }
+      doc.text(line, marginX, y);
+      y += lineHeight;
+    }
+  }
+  doc.save('ats-safe-resume.pdf');
+}
+
+async function doDownload(format){
+  try{
+    const out = await api('/api/rewrite/download', {method:'POST', body: JSON.stringify({resume_text: $('rewriteText').value})});
+    if(format === 'txt') saveTxt(out.resume_text);
+    else if(format === 'doc') saveDoc(out.resume_text);
+    else if(format === 'pdf') savePdf(out.resume_text);
+    await loadMe();
+    renderDownloadArea();
+  }catch(err){ alert(err.message); }
+}
+
+$('analyzeBtn').addEventListener('click', async ()=>{
+  const resume = $('resumeText').value.trim();
+  // In "Just the job title" mode we ignore whatever is in the (hidden) JD textarea,
+  // so switching modes can't accidentally send stale pasted text.
+  const jd = jdMode === 'paste' ? $('jdText').value.trim() : '';
+  const role = $('targetRole').value.trim();
+  const st=$('status'), btn=$('analyzeBtn');
+  st.className='status'; st.textContent='';
+  if(!resume){ st.className='status err'; st.textContent='Please add your resume text.'; return; }
+  if(jdMode === 'paste' && !jd && !role){
+    st.className='status err';
+    st.textContent = 'Paste a job description, or switch to "Just the job title" and enter a role.';
+    return;
+  }
+  if(jdMode === 'title' && !role){
+    st.className='status err';
+    st.textContent = 'Enter the target role/title above.';
+    return;
+  }
+  btn.disabled=true; st.textContent='Analyzing…';
+  try{
+    lastResumeText=resume; lastJdText=jd; lastRole=role;
+    const data = await api('/api/analyze', {method:'POST', body: JSON.stringify({resume_text:resume, jd_text:jd, target_role:role})});
+    lastAnalysis = data;
+    renderResults(data);
+    st.textContent='Analysis complete.';
+  }catch(err){ st.className='status err'; st.textContent=err.message; }
+  finally{ btn.disabled=false; }
+});
+
+/* ============================================================================
+ * BOOT
+ * ==========================================================================*/
+if(token) showApp(); else showAuth();
+</script>
+</body>
+</html>
