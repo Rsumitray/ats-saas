@@ -2,6 +2,7 @@ fastapi==0.115.0
 uvicorn[standard]==0.30.6
 python-dotenv==1.0.1
 sqlalchemy==2.0.35
+psycopg2-binary==2.9.9
 pydantic[email]==2.9.2
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
@@ -10,5 +11,10 @@ python-multipart==0.0.9
 anthropic==0.34.2
 httpx==0.27.2
 razorpay==1.4.2
+# razorpay's client.py imports pkg_resources, which newer setuptools (>=81)
+# no longer includes — this crashed the app on both local testing and the
+# first Railway deploy with "ModuleNotFoundError: No module named
+# 'pkg_resources'". Pinning an older setuptools fixes it everywhere.
+setuptools<81
 pdfplumber==0.11.4
 python-docx==1.1.2
