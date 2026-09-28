@@ -238,35 +238,58 @@ def rewrite(body: RewriteBody, user: User = Depends(get_current_user), db: Sessi
     return result
 
 
-# ---------- Job recommendations & interview prep — free, like analysis ----------
+# ---------- Job recommendations & interview prep — PAID, share the "Rewrites" quota ----------
 # Deliberately separate endpoints from /api/analyze (see the comment in llm.py above
 # job_recommendations()/interview_prep()) rather than extra fields on the analysis
-# response. Free for now, same as analysis — if free-tier AI cost ever needs
-# tightening, these two are the natural first candidates to gate behind the paid
-# plan, since they're an enhancement on top of the core ATS score, not the core
-# product itself. That's a pricing decision to make deliberately later, not now.
+# response. Gated the same way as /api/rewrite and drawing from the same
+# modify_quota/modify_used counter — each call here is indistinguishable from a
+# rewrite call for quota purposes, just a different thing generated.
 
 @app.post("/api/job-recommendations")
 def job_recommendations(body: AnalyzeBody, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not _plan_is_live(user):
+        raise HTTPException(402, "Job recommendations need an active plan. Buy a plan to unlock this.")
+    if user.modify_used >= user.modify_quota:
+        raise HTTPException(
+            402,
+            f"You've used all {user.modify_quota} rewrites/generations on your current plan. "
+            f"Top up to get {billing.TOPUP_MODIFY_QUOTA} more (your plan is still valid until "
+            f"{user.plan_expires_at.date()}).",
+        )
     if not body.resume_text.strip():
         raise HTTPException(422, "resume_text is required.")
     try:
         result = llm.job_recommendations(body.resume_text, body.target_role or "")
     except Exception as e:
         raise HTTPException(502, f"Job recommendations failed: {e}")
+    user.modify_used += 1
+    db.commit()
     _log_usage(db, user.id, "job_recommendations")
+    result["modify_remaining"] = user.modify_quota - user.modify_used
     return result
 
 
 @app.post("/api/interview-prep")
 def interview_prep(body: AnalyzeBody, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not _plan_is_live(user):
+        raise HTTPException(402, "Interview prep needs an active plan. Buy a plan to unlock this.")
+    if user.modify_used >= user.modify_quota:
+        raise HTTPException(
+            402,
+            f"You've used all {user.modify_quota} rewrites/generations on your current plan. "
+            f"Top up to get {billing.TOPUP_MODIFY_QUOTA} more (your plan is still valid until "
+            f"{user.plan_expires_at.date()}).",
+        )
     if not body.resume_text.strip():
         raise HTTPException(422, "resume_text is required.")
     try:
         result = llm.interview_prep(body.resume_text, body.jd_text, body.target_role or "")
     except Exception as e:
         raise HTTPException(502, f"Interview prep failed: {e}")
+    user.modify_used += 1
+    db.commit()
     _log_usage(db, user.id, "interview_prep")
+    result["modify_remaining"] = user.modify_quota - user.modify_used
     return result
 
 

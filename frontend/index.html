@@ -163,7 +163,7 @@ const CONFIG = {
   // Set this to your deployed backend's base URL, e.g. "https://your-api.up.railway.app".
   // Left as the placeholder below on purpose so a misconfigured deploy fails
   // LOUDLY (see checkConfig() below) instead of quietly showing "Failed to fetch".
-  API_BASE_URL: '__API_BASE_URL__',
+  API_BASE_URL: 'https://ats-saas-production.up.railway.app',
   // When true, every API call and its result is logged to the browser console
   // as `[ATS]`. Turn this on while debugging, off for a slightly cleaner console in prod.
   DEBUG: true,
@@ -517,15 +517,23 @@ function renderResults(data){
   }
 
   html += `<div class="card"><h2>Job Recommendations</h2>
-    <div class="tag" style="margin-bottom:10px">Free — roles you're genuinely qualified for right now, based only on what's in your resume.</div>
-    <button class="primary" id="jobRecsBtn">Get Job Recommendations</button>
-    <div class="status" id="jobRecsStatus"></div>
+    <div class="tag" style="margin-bottom:10px">Roles you're genuinely qualified for right now, based only on what's in your resume.</div>`;
+  if(meCache && meCache.plan_active){
+    html += `<button class="primary" id="jobRecsBtn">Get Job Recommendations (${meCache.modify_remaining} left)</button>`;
+  } else {
+    html += `<div style="border:1px dashed var(--accent);border-radius:12px;padding:16px;text-align:center">This needs an active plan.<br><button class="primary" id="buyFromJobRecsBtn" style="margin-top:8px">Buy plan — ₹${meCache?.prices?.plan_inr||350}/mo</button></div>`;
+  }
+  html += `<div class="status" id="jobRecsStatus"></div>
     <div id="jobRecsOut" class="hidden" style="margin-top:12px"></div></div>`;
 
   html += `<div class="card"><h2>Interview Prep</h2>
-    <div class="tag" style="margin-bottom:10px">Free — likely interview questions for this resume/role, with prep tips grounded in your own background.</div>
-    <button class="primary" id="interviewPrepBtn">Generate Interview Questions</button>
-    <div class="status" id="interviewPrepStatus"></div>
+    <div class="tag" style="margin-bottom:10px">Likely interview questions for this resume/role, with prep tips grounded in your own background.</div>`;
+  if(meCache && meCache.plan_active){
+    html += `<button class="primary" id="interviewPrepBtn">Generate Interview Questions (${meCache.modify_remaining} left)</button>`;
+  } else {
+    html += `<div style="border:1px dashed var(--accent);border-radius:12px;padding:16px;text-align:center">This needs an active plan.<br><button class="primary" id="buyFromPrepBtn" style="margin-top:8px">Buy plan — ₹${meCache?.prices?.plan_inr||350}/mo</button></div>`;
+  }
+  html += `<div class="status" id="interviewPrepStatus"></div>
     <div id="interviewPrepOut" class="hidden" style="margin-top:12px"></div></div>`;
 
   html += `<div class="card"><h2>Rewrite my resume (ATS &amp; OCR safe)</h2>
@@ -546,7 +554,9 @@ function renderResults(data){
   $('results').innerHTML = html;
   $('results').classList.remove('hidden');
   $('jobRecsBtn')?.addEventListener('click', doJobRecs);
+  $('buyFromJobRecsBtn')?.addEventListener('click', ()=>startPurchase('plan'));
   $('interviewPrepBtn')?.addEventListener('click', doInterviewPrep);
+  $('buyFromPrepBtn')?.addEventListener('click', ()=>startPurchase('plan'));
   $('rewriteBtn')?.addEventListener('click', doRewrite);
   $('buyFromResultsBtn')?.addEventListener('click', ()=>startPurchase('plan'));
 }
@@ -563,7 +573,8 @@ async function doJobRecs(){
     });
     out.innerHTML = html || '<div class="tag">No recommendations returned.</div>';
     out.classList.remove('hidden');
-    st.textContent = '';
+    st.textContent = data.modify_remaining!=null ? `${data.modify_remaining} rewrites/generations left this cycle.` : '';
+    await loadMe();
   }catch(err){ st.className='status err'; st.textContent=err.message; }
   finally{ btn.disabled=false; }
 }
@@ -580,7 +591,8 @@ async function doInterviewPrep(){
     });
     out.innerHTML = html || '<div class="tag">No questions returned.</div>';
     out.classList.remove('hidden');
-    st.textContent = '';
+    st.textContent = data.modify_remaining!=null ? `${data.modify_remaining} rewrites/generations left this cycle.` : '';
+    await loadMe();
   }catch(err){ st.className='status err'; st.textContent=err.message; }
   finally{ btn.disabled=false; }
 }
