@@ -19,20 +19,24 @@ login token) and includes a fingerprint of the user's current password
 hash. As soon as the password changes, the link stops working, so every
 link can only be used once.
 
+Emails are sent through Brevo's HTTPS API, because Railway blocks normal
+email (SMTP) on the Trial and Hobby plans.
+
 Railway variables needed (backend service -> Variables):
-  GMAIL_USER          shreeresumebuild.ai@gmail.com
-  GMAIL_APP_PASSWORD  the 16-character Google App Password
+  BREVO_API_KEY       your Brevo API key (starts with xkeysib-)
+  GMAIL_USER          shreeresumebuild.ai@gmail.com  (used as the sender address;
+                      must be a verified sender in Brevo)
   JWT_SECRET          already set
   FRONTEND_URL        already set (https://shreeresumebuild-ai.netlify.app)
 """
 
 import hashlib
+import json
 import os
-import smtplib
-import ssl
 import time
 import datetime
-from email.message import EmailMessage
+import urllib.error
+import urllib.request
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from jose import JWTError, jwt
@@ -49,7 +53,7 @@ RESEND_COOLDOWN_SECONDS = 60
 _frontend = os.getenv("FRONTEND_URL", "")
 FRONTEND_URL = (_frontend if _frontend and _frontend != "*" else "https://shreeresumebuild-ai.netlify.app").rstrip("/")
 GMAIL_USER = os.getenv("GMAIL_USER", "")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 _RESET_KEY = (os.getenv("JWT_SECRET", "") + ":password-reset")
 
 GENERIC_MESSAGE = (
@@ -79,21 +83,17 @@ def _make_token(user: User) -> str:
 
 
 def _send_reset_email(to_email: str, link: str) -> None:
-    if not (GMAIL_USER and GMAIL_APP_PASSWORD):
-        print("[password_reset] GMAIL_USER / GMAIL_APP_PASSWORD not set, email not sent.")
+    if not (BREVO_API_KEY and GMAIL_USER):
+        print("[password_reset] BREVO_API_KEY / GMAIL_USER not set, email not sent.")
         return
 
-    msg = EmailMessage()
-    msg["Subject"] = "Reset your ShreeResumebuild.AI password"
-    msg["From"] = f"ShreeResumebuild.AI <{GMAIL_USER}>"
-    msg["To"] = to_email
-    msg.set_content(
+    text = (
         "We received a request to reset your ShreeResumebuild.AI password.\n\n"
         f"Set a new password here (link works for {TOKEN_TTL_MINUTES} minutes, one time only):\n{link}\n\n"
         "If you didn't ask for this, ignore this email. Your password won't change.\n\n"
         "S2&P AI Tech"
     )
-    msg.add_alternative(f"""\
+    html = f"""\
 <div style="font-family:Arial,sans-serif;max-width:480px;line-height:1.6;color:#222">
   <h2 style="margin:0 0 12px">Reset your password</h2>
   <p>We received a request to reset your ShreeResumebuild.AI password.</p>
@@ -102,13 +102,26 @@ def _send_reset_email(to_email: str, link: str) -> None:
   <p style="font-size:13px;color:#666">This link works for {TOKEN_TTL_MINUTES} minutes and can be used once.
      If you didn't ask for this, ignore this email. Your password won't change.</p>
   <p style="font-size:13px;color:#666">S2&amp;P AI Tech</p>
-</div>""", subtype="html")
+</div>"""
 
+    payload = {
+        "sender": {"name": "ShreeResumebuild.AI", "email": GMAIL_USER},
+        "to": [{"email": to_email}],
+        "subject": "Reset your ShreeResumebuild.AI password",
+        "textContent": text,
+        "htmlContent": html,
+    }
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode(),
+        headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json", "Accept": "application/json"},
+        method="POST",
+    )
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context(), timeout=20) as s:
-            s.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            s.send_message(msg)
-        print(f"[password_reset] Reset email sent to {to_email}")
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            print(f"[password_reset] Reset email sent to {to_email} (Brevo status {resp.status})")
+    except urllib.error.HTTPError as e:
+        print(f"[password_reset] Brevo rejected email to {to_email}: {e.code} {e.read().decode(errors='ignore')[:300]}")
     except Exception as e:
         print(f"[password_reset] Failed to send email to {to_email}: {e}")
 
