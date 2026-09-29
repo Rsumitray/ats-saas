@@ -19,6 +19,7 @@ from auth import hash_password, verify_password, create_access_token, get_curren
 import extract
 import llm
 import billing
+from password_reset import router as password_reset_router
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
 
@@ -32,6 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(password_reset_router)
 
 @app.on_event("startup")
 def on_startup():
